@@ -1,10 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { OfferPayload, TenantContext } from './offer.types.js';
-import {
-  OfferRepository,
-  type OfferQueryBuilder,
-  type OfferRow,
-} from './offer.repository.js';
+import { OfferRepository, type OfferQueryBuilder, type OfferRow } from './offer.repository.js';
 
 const buildContext = (overrides: Partial<TenantContext> = {}): TenantContext => ({
   tenantId: 'tenant1',
@@ -34,7 +30,7 @@ class FakeQueryBuilder implements OfferQueryBuilder {
 
 const createDatabase = (rows: OfferRow[] = []) => {
   const builders: FakeQueryBuilder[] = [];
-  const db = vi.fn((table: string): OfferQueryBuilder => {
+  const db = vi.fn((_table: string): OfferQueryBuilder => {
     const builder = new FakeQueryBuilder(rows);
     builders.push(builder);
     return builder;

@@ -237,8 +237,8 @@ describe('OfferService.getValidOffers', () => {
   it('propagates repository tenant-isolation guardrail failures', async () => {
     repository.findOffersByTenant.mockRejectedValue(new Error('Invalid tenant context'));
 
-    await expect(
-      service.getValidOffers(buildTenant({ tenantId: '' })),
-    ).rejects.toThrow('Invalid tenant context');
+    await expect(service.getValidOffers(buildTenant({ tenantId: '' }))).rejects.toThrow(
+      'Invalid tenant context',
+    );
   });
 });

@@ -138,11 +138,11 @@ const result = service.validateOffer(tenantContext, offer); // OfferValidationRe
 const offers = await service.getValidOffers(tenantContext); // OfferPayload[]
 ```
 
-| Export | Signature | Description |
-| --- | --- | --- |
-| `OfferService.validateOffer` | `(context: TenantContext, offer: OfferPayload) => OfferValidationResult` | Synchronous rule evaluation |
-| `OfferService.getValidOffers` | `(context: TenantContext) => Promise<OfferPayload[]>` | Fetches tenant-scoped offers via the repository and filters by business rules |
-| `OfferRepository.findOffersByTenant` | `(context: TenantContext) => Promise<OfferPayload[]>` | Tenant-isolated query with the `tenant0` exclusive-offer guardrail |
+| Export                               | Signature                                                                | Description                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
+| `OfferService.validateOffer`         | `(context: TenantContext, offer: OfferPayload) => OfferValidationResult` | Synchronous rule evaluation                                                   |
+| `OfferService.getValidOffers`        | `(context: TenantContext) => Promise<OfferPayload[]>`                    | Fetches tenant-scoped offers via the repository and filters by business rules |
+| `OfferRepository.findOffersByTenant` | `(context: TenantContext) => Promise<OfferPayload[]>`                    | Tenant-isolated query with the `tenant0` exclusive-offer guardrail            |
 
 ## Security
 
