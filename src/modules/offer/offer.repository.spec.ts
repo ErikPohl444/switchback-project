@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { OfferPayload, TenantContext } from './offer.types.js';
-import { OfferRepository, type OfferQueryBuilder, type OfferRow } from './offer.repository.js';
+import {
+  OfferRepository,
+  type OfferQueryBuilder,
+  type OfferRow,
+  type TenantScopedOfferQuery,
+} from './offer.repository.js';
 
 const buildContext = (overrides: Partial<TenantContext> = {}): TenantContext => ({
   tenantId: 'tenant1',
@@ -8,17 +13,17 @@ const buildContext = (overrides: Partial<TenantContext> = {}): TenantContext => 
   ...overrides,
 });
 
-class FakeQueryBuilder implements OfferQueryBuilder {
+class FakeQueryBuilder implements OfferQueryBuilder, TenantScopedOfferQuery {
   readonly clauses: Array<{ column: string; value: unknown }> = [];
 
   constructor(private readonly rows: OfferRow[]) {}
 
-  where(column: string, value: unknown): OfferQueryBuilder {
+  where(column: 'tenant_id', value: string): TenantScopedOfferQuery {
     this.clauses.push({ column, value });
     return this;
   }
 
-  andWhere(column: string, value: unknown): OfferQueryBuilder {
+  andWhere(column: string, value: unknown): TenantScopedOfferQuery {
     this.clauses.push({ column, value });
     return this;
   }

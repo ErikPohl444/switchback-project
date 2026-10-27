@@ -1,9 +1,12 @@
 import type { OfferPayload, TenantContext } from './offer.types.js';
 
-export interface OfferQueryBuilder {
-  where(column: string, value: unknown): OfferQueryBuilder;
-  andWhere(column: string, value: unknown): OfferQueryBuilder;
+export interface TenantScopedOfferQuery {
+  andWhere(column: string, value: unknown): TenantScopedOfferQuery;
   select(): Promise<OfferRow[]>;
+}
+
+export interface OfferQueryBuilder {
+  where(column: 'tenant_id', value: string): TenantScopedOfferQuery;
 }
 
 export interface OfferRow {
