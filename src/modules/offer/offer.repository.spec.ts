@@ -24,7 +24,11 @@ class FakeQueryBuilder implements OfferQueryBuilder {
   }
 
   select(): Promise<OfferRow[]> {
-    return Promise.resolve(this.rows);
+    return Promise.resolve(
+      this.rows.filter((row) =>
+        this.clauses.every(({ column, value }) => row[column as keyof OfferRow] === value),
+      ),
+    );
   }
 }
 
@@ -77,6 +81,46 @@ describe('OfferRepository.findOffersByTenant', () => {
     await repository.findOffersByTenant(buildContext({ tenantId: 'tenant1' }));
 
     expect(builders[0]?.clauses).toEqual([{ column: 'tenant_id', value: 'tenant1' }]);
+  });
+
+  describe('tenant isolation breaches', () => {
+    const buildRow = (overrides: Partial<OfferRow> = {}): OfferRow => ({
+      id: 'offer-0',
+      code: 'CODE10',
+      discount_percentage: 10,
+      max_redemptions: 100,
+      current_redemptions: 0,
+      expires_at: '2026-06-01T00:00:00.000Z',
+      tenant_id: 'tenant0',
+      is_exclusive: false,
+      ...overrides,
+    });
+
+    const breachRows = (): OfferRow[] => [
+      buildRow({ id: 'tenant0-baseline', tenant_id: 'tenant0', is_exclusive: false }),
+      buildRow({ id: 'tenant0-exclusive', tenant_id: 'tenant0', is_exclusive: true }),
+      buildRow({ id: 'switchback-exclusive', tenant_id: 'switchback', is_exclusive: true }),
+      buildRow({ id: 'switchback-baseline', tenant_id: 'switchback', is_exclusive: false }),
+    ];
+
+    it('never surfaces a Switchback-exclusive offer to tenant0', async () => {
+      const { repository } = buildRepository(breachRows());
+
+      const offers = await repository.findOffersByTenant(buildContext({ tenantId: 'tenant0' }));
+
+      expect(offers.map((offer) => offer.id)).toEqual(['tenant0-baseline']);
+    });
+
+    it("never leaks another tenant's offers into a query result", async () => {
+      const { repository } = buildRepository(breachRows());
+
+      const offers = await repository.findOffersByTenant(buildContext({ tenantId: 'switchback' }));
+
+      expect(offers.map((offer) => offer.id)).toEqual([
+        'switchback-exclusive',
+        'switchback-baseline',
+      ]);
+    });
   });
 
   it('refuses to query without a tenantId', async () => {
