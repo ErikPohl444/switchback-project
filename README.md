@@ -99,6 +99,19 @@ Type-check without emitting:
 npx tsc --noEmit
 ```
 
+Run with the coverage gate:
+
+```bash
+npm run test:coverage
+```
+
+### Coverage policy
+
+Coverage is gated in tiers (`vitest.config.ts`):
+
+- `src/modules/**` (pure domain logic): 100% for statements, branches, functions, and lines.
+- Global floor for everything else counted by the runner: 90%. I/O adapters, once introduced, are expected to live in this tier rather than under `src/modules/**`.
+
 ## Project Structure
 
 ```
