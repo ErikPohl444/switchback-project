@@ -16,3 +16,7 @@ export interface OfferValidationResult {
   isValid: boolean;
   reason?: string;
 }
+
+export interface OfferDataSource {
+  findOffersByTenant(context: TenantContext): Promise<OfferPayload[]>;
+}

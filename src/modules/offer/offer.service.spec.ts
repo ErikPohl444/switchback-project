@@ -20,13 +20,19 @@ const buildOffer = (overrides: Partial<OfferPayload> = {}): OfferPayload => ({
   ...overrides,
 });
 
+const createRepository = (offers: OfferPayload[] = []) => ({
+  findOffersByTenant: vi.fn(async (_context: TenantContext) => offers),
+});
+
 describe('OfferService.validateOffer', () => {
+  let repository: ReturnType<typeof createRepository>;
   let service: OfferService;
 
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(FIXED_NOW);
-    service = new OfferService();
+    repository = createRepository();
+    service = new OfferService(repository);
   });
 
   afterEach(() => {
@@ -169,5 +175,70 @@ describe('OfferService.validateOffer', () => {
 
       expect(result).toEqual({ isValid: true });
     });
+  });
+});
+
+describe('OfferService.getValidOffers', () => {
+  let repository: ReturnType<typeof createRepository>;
+  let service: OfferService;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(FIXED_NOW);
+    repository = createRepository();
+    service = new OfferService(repository);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('delegates data fetching to the repository with the caller context', async () => {
+    const context = buildTenant();
+
+    await service.getValidOffers(context);
+
+    expect(repository.findOffersByTenant).toHaveBeenCalledTimes(1);
+    expect(repository.findOffersByTenant).toHaveBeenCalledWith(context);
+  });
+
+  it('passes the tenant0 context through so the repository applies the exclusive guardrail', async () => {
+    const context = buildTenant({ tenantId: 'tenant0' });
+
+    await service.getValidOffers(context);
+
+    expect(repository.findOffersByTenant).toHaveBeenCalledWith(context);
+  });
+
+  it('returns only offers that pass business rules', async () => {
+    const valid = buildOffer({ id: 'valid' });
+    const expired = buildOffer({ id: 'expired', expiresAt: new Date(FIXED_NOW.getTime() - 1) });
+    const exhausted = buildOffer({
+      id: 'exhausted',
+      currentRedemptions: 100,
+      maxRedemptions: 100,
+    });
+    repository.findOffersByTenant.mockResolvedValue([valid, expired, exhausted]);
+
+    const result = await service.getValidOffers(buildTenant());
+
+    expect(result).toEqual([valid]);
+  });
+
+  it('returns the full repository result when every offer is valid', async () => {
+    const offers = [buildOffer({ id: 'a' }), buildOffer({ id: 'b' })];
+    repository.findOffersByTenant.mockResolvedValue(offers);
+
+    const result = await service.getValidOffers(buildTenant());
+
+    expect(result).toEqual(offers);
+  });
+
+  it('propagates repository tenant-isolation guardrail failures', async () => {
+    repository.findOffersByTenant.mockRejectedValue(new Error('Invalid tenant context'));
+
+    await expect(
+      service.getValidOffers(buildTenant({ tenantId: '' })),
+    ).rejects.toThrow('Invalid tenant context');
   });
 });
