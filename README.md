@@ -12,6 +12,7 @@ A multi-tenant offers service slice implementing tenant-scoped offer validation 
 - [Configuration](#configuration)
 - [Running](#running)
 - [Testing](#testing)
+- [Linting and Formatting](#linting-and-formatting)
 - [Project Structure](#project-structure)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
@@ -111,6 +112,33 @@ Coverage is gated in tiers (`vitest.config.ts`):
 
 - `src/modules/**` (pure domain logic): 100% for statements, branches, functions, and lines.
 - Global floor for everything else counted by the runner: 90%. I/O adapters, once introduced, are expected to live in this tier rather than under `src/modules/**`.
+
+## Linting and Formatting
+
+Run the linter:
+
+```bash
+npm run lint
+```
+
+Check formatting without writing:
+
+```bash
+npm run format:check
+```
+
+Rewrite files with formatting fixes:
+
+```bash
+npm run format
+```
+
+### Key decisions
+
+- **`oxlint` is the linter.** It parses TypeScript natively (Rust implementation) and has no dependency on the `typescript` compiler package. `typescript-eslint` was evaluated first but hard-fails at runtime on this project's TypeScript 7 toolchain; `oxlint` is the substitution until typescript-eslint ships TypeScript 7 support, at which point it can be swapped back in `package.json` with no config changes elsewhere.
+- **Formatting is delegated to `prettier`**, not the linter. Configuration lives in `.prettierrc` (single quotes, 100 print width, trailing commas) with `dist/`, `coverage/`, and `package-lock.json` excluded via `.prettierignore`. The linter therefore stays focused on correctness rules rather than style.
+- **Unused variables and parameters must start with `_`** (for example a deliberately ignored mock parameter) to pass `no-unused-vars`. This is the repo-wide convention for signaling "intentionally not used".
+- **CI enforces both** `npm run lint` and `npm run format:check` on every push to `main` and pull request (see `.github/workflows/ci.yml`).
 
 ## Project Structure
 
