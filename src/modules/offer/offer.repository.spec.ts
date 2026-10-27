@@ -136,4 +136,22 @@ describe('OfferRepository.findOffersByTenant', () => {
     expect(offers).toEqual([expected]);
     expect(offers[0]?.expiresAt).toBeInstanceOf(Date);
   });
+
+  it('accepts rows where expires_at is already a Date', async () => {
+    const row: OfferRow = {
+      id: 'offer-10',
+      code: 'DATE5',
+      discount_percentage: 5,
+      max_redemptions: 10,
+      current_redemptions: 0,
+      expires_at: new Date('2026-06-01T00:00:00.000Z'),
+      tenant_id: 'tenant1',
+      is_exclusive: false,
+    };
+    const { repository } = buildRepository([row]);
+
+    const offers = await repository.findOffersByTenant(buildContext());
+
+    expect(offers[0]?.expiresAt).toEqual(new Date('2026-06-01T00:00:00.000Z'));
+  });
 });
