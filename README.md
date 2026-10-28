@@ -14,6 +14,7 @@ A multi-tenant offers service slice implementing tenant-scoped offer validation 
 - [Testing](#testing)
 - [Linting and Formatting](#linting-and-formatting)
 - [Project Structure](#project-structure)
+- [Starter Kit](#starter-kit)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Security](#security)
@@ -152,7 +153,13 @@ src/
         ├── offer.service.spec.ts     # Service unit tests
         ├── offer.repository.ts       # Tenant-isolated data access
         └── offer.repository.spec.ts  # Repository unit tests
+starter-kit/
+└── ...                               # Copy-ready toolchain scaffolding (see Starter Kit)
 ```
+
+## Starter Kit
+
+The engineering scaffolding this service was built on — strict TypeScript config, the Vitest setup with tiered coverage thresholds, lint/format tooling, CI workflow, and pinned Node version — is packaged under [`starter-kit/`](./starter-kit/README.md) as a copy-ready template for spinning up a new service with the same toolchain from day one. It is explicitly **not** a per-tenant template: the offers service is multi-tenant, so new tenants are onboarded into this service by adding tenant-scoped data, not by cloning separate services.
 
 ## Architecture
 
