@@ -1,4 +1,5 @@
 import type { OfferPayload, TenantContext } from './offer.types.js';
+import { assertTenantId } from './tenant.js';
 
 export interface TenantScopedOfferQuery {
   andWhere(column: string, value: unknown): TenantScopedOfferQuery;
@@ -22,7 +23,7 @@ export interface OfferRow {
 
 export type OfferDatabaseClient = (table: 'offers') => OfferQueryBuilder;
 
-const EXCLUSIVE_TENANT_ID = 'tenant0';
+const EXCLUSIVITY_TENANT_ID = 'switchback';
 
 function toOfferPayload(row: OfferRow): OfferPayload {
   const expiresAt = row.expires_at instanceof Date ? row.expires_at : new Date(row.expires_at);
@@ -40,13 +41,10 @@ export class OfferRepository {
   constructor(private readonly db: OfferDatabaseClient) {}
 
   async findOffersByTenant(context: TenantContext): Promise<OfferPayload[]> {
-    const tenantId = context?.tenantId;
-    if (typeof tenantId !== 'string' || tenantId.trim() === '') {
-      throw new Error('Invalid tenant context');
-    }
+    const tenantId = assertTenantId(context?.tenantId);
 
     let query = this.db('offers').where('tenant_id', tenantId);
-    if (tenantId === EXCLUSIVE_TENANT_ID) {
+    if (tenantId !== EXCLUSIVITY_TENANT_ID) {
       query = query.andWhere('is_exclusive', false);
     }
 

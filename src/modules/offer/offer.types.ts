@@ -1,5 +1,7 @@
+import type { TenantId } from './tenant.js';
+
 export interface TenantContext {
-  tenantId: string;
+  tenantId: TenantId;
   environment: 'development' | 'staging' | 'production';
 }
 

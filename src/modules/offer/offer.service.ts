@@ -4,12 +4,13 @@ import type {
   OfferValidationResult,
   TenantContext,
 } from './offer.types.js';
+import { isTenantId } from './tenant.js';
 
 export class OfferService {
   constructor(private readonly repository: OfferDataSource) {}
 
   validateOffer(context: TenantContext, offer: OfferPayload): OfferValidationResult {
-    if (typeof context?.tenantId !== 'string' || context.tenantId.trim() === '') {
+    if (!isTenantId(context?.tenantId)) {
       return { isValid: false, reason: 'Invalid tenant context' };
     }
 
