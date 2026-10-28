@@ -31,7 +31,8 @@ The Switchback Offers Service validates and retrieves promotional offers on beha
 
 - Offer validation against tenant context, expiry (`expiresAt`), and redemption limits (`currentRedemptions` vs. `maxRedemptions`).
 - Repository-level tenant isolation: every query is automatically bound to the caller's `tenant_id`.
-- Structural guardrail: tenant `tenant0` automatically receives an appended `is_exclusive = false` filter and can never receive Switchback-exclusive offers.
+- Closed tenant universe: the only supported tenants are `tenant0` and `switchback` (`TenantId` union). An unknown, missing, or empty tenant fails closed before any query is built — it never returns an inert empty set.
+- Structural guardrail: `Switchback`-exclusive offers surface only for the tenant they were negotiated for (`switchback`). Every other tenant automatically receives an appended `is_exclusive = false` filter, so a tenant-0 caller can never receive Switchback-exclusive offers even if an exclusive row were misfiled into tenant-0's partition.
 - Deterministic, dependency-injected design (service depends on an `OfferDataSource` port, not a concrete client).
 - Full Vitest unit test suite covering validation rules, boundaries, and query-structure guardrails.
 
@@ -152,7 +153,9 @@ src/
         ├── offer.service.ts          # Business rules (validateOffer, getValidOffers)
         ├── offer.service.spec.ts     # Service unit tests
         ├── offer.repository.ts       # Tenant-isolated data access
-        └── offer.repository.spec.ts  # Repository unit tests
+        ├── offer.repository.spec.ts  # Repository unit tests
+        ├── tenant.ts                 # Closed tenant universe, TenantId guard, typed context error
+        └── tenant.spec.ts            # Tenant contract unit tests
 starter-kit/
 └── ...                               # Copy-ready toolchain scaffolding (see Starter Kit)
 ```
@@ -163,8 +166,9 @@ The engineering scaffolding this service was built on — strict TypeScript conf
 
 ## Architecture
 
-- **`OfferService`** — evaluates business rules only: tenant context presence, expiry, redemption limits. Fetches data exclusively through the `OfferDataSource` port.
-- **`OfferRepository`** — implements `OfferDataSource`. Wraps the database client, always binds `.where('tenant_id', context.tenantId)`, and structurally appends `.andWhere('is_exclusive', false)` when the caller is `tenant0`. It refuses to execute any query without a valid `tenantId`.
+- **`OfferService`** — evaluates business rules only: tenant context validity (shape and membership in the closed universe), expiry, redemption limits. Fetches data exclusively through the `OfferDataSource` port.
+- **`OfferRepository`** — implements `OfferDataSource`. Wraps the database client, always binds `.where('tenant_id', context.tenantId)`, and structurally appends `.andWhere('is_exclusive', false)` for every caller other than the exclusivity tenant (`switchback`) — so `tenant0` can never receive a `switchback`-exclusive offer even if one were misfiled into `tenant0`'s partition. It refuses to execute any query with a missing, empty, or unknown tenant context, throwing the typed `InvalidTenantContextError` before the database is touched.
+- **`tenant.ts`** — the tenant contract: the closed `TENANT_IDS` universe (`tenant0` | `switchback`), the `isTenantId`/`assertTenantId` guards, and `InvalidTenantContextError`.
 - **Types** — `TenantContext`, `OfferPayload`, `OfferValidationResult`, `OfferDataSource` are the shared contracts between layers.
 
 Validation failure reasons, in precedence order:
@@ -192,12 +196,14 @@ const offers = await service.getValidOffers(tenantContext); // OfferPayload[]
 | ------------------------------------ | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------- |
 | `OfferService.validateOffer`         | `(context: TenantContext, offer: OfferPayload) => OfferValidationResult` | Synchronous rule evaluation                                                   |
 | `OfferService.getValidOffers`        | `(context: TenantContext) => Promise<OfferPayload[]>`                    | Fetches tenant-scoped offers via the repository and filters by business rules |
-| `OfferRepository.findOffersByTenant` | `(context: TenantContext) => Promise<OfferPayload[]>`                    | Tenant-isolated query with the `tenant0` exclusive-offer guardrail            |
+| `OfferRepository.findOffersByTenant` | `(context: TenantContext) => Promise<OfferPayload[]>`                    | Tenant-isolated query with the exclusive-offer whitelist guardrail            |
+| `assertTenantId`                     | `(value: unknown) => TenantId`                                           | Boundary guard in `tenant.ts`; returns in-universe tenants, throws otherwise  |
 
 ## Security
 
 - Tenant isolation is enforced at the repository boundary: queries are bound to the caller's `tenant_id` and cannot be constructed without a valid tenant context.
-- `tenant0` is structurally restricted from Switchback-exclusive offers at query construction time.
+- The tenant universe is closed (`tenant0` | `switchback`); unknown, missing, or empty tenants are rejected fail-closed — with the typed `InvalidTenantContextError` — before any query is built.
+- Exclusive offers are whitelist-shaped: they surface only for the tenant the exclusivity was negotiated for (`switchback`); every other tenant, including `tenant0`, gets `is_exclusive = false` appended at query construction time, so exclusives cannot leak across tenants even through misfiled rows.
 - Reporting vulnerabilities: TBD (contact/process to be defined).
 
 ## Roadmap
