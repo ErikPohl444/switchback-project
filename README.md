@@ -173,6 +173,8 @@ Validation failure reasons, in precedence order:
 2. `Offer has expired`
 3. `Redemption limit reached`
 
+The decision log for the built isolation slice — key tradeoffs, the designed-not-built pieces, what I would harden next, and how to extend the service — lives in [DECISIONS.md](./DECISIONS.md).
+
 ## API Reference
 
 ```ts
