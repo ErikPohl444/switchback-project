@@ -14,7 +14,6 @@ A multi-tenant offers service slice implementing tenant-scoped offer validation 
 - [Testing](#testing)
 - [Linting and Formatting](#linting-and-formatting)
 - [Project Structure](#project-structure)
-- [Starter Kit](#starter-kit)
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Security](#security)
@@ -26,6 +25,8 @@ A multi-tenant offers service slice implementing tenant-scoped offer validation 
 ## About
 
 The Switchback Offers Service validates and retrieves promotional offers on behalf of tenants. Business rules (expiry, redemption limits) are evaluated in the service layer, while tenant isolation is enforced structurally in the repository layer so that no caller can query another tenant's offers.
+
+- **Repository:** [https://github.com/ErikPohl444/switchback-project](https://github.com/ErikPohl444/switchback-project)
 
 ## Features
 
@@ -50,7 +51,7 @@ The Switchback Offers Service validates and retrieves promotional offers on beha
 ## Installation
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/ErikPohl444/switchback-project.git
 cd switchback-project
 npm install
 ```
@@ -156,13 +157,7 @@ src/
         ├── offer.repository.spec.ts  # Repository unit tests
         ├── tenant.ts                 # Closed tenant universe, TenantId guard, typed context error
         └── tenant.spec.ts            # Tenant contract unit tests
-starter-kit/
-└── ...                               # Copy-ready toolchain scaffolding (see Starter Kit)
 ```
-
-## Starter Kit
-
-The engineering scaffolding this service was built on — strict TypeScript config, the Vitest setup with tiered coverage thresholds, lint/format tooling, CI workflow, and pinned Node version — is packaged under [`starter-kit/`](./starter-kit/README.md) as a copy-ready template for spinning up a new service with the same toolchain from day one. It is explicitly **not** a per-tenant template: the offers service is multi-tenant, so new tenants are onboarded into this service by adding tenant-scoped data, not by cloning separate services.
 
 ## Architecture
 
