@@ -219,7 +219,7 @@ The distributable case study questions, sections, current assumptions, and bank 
 
 ## AI Leverage Log
 
-A qualitative developer experience (devex) log evaluating AI models and agentic tooling during this project is available as an HTML document: [AI Leverage Log](./ai-log.html).
+A qualitative developer experience (devex) log evaluating AI models and agentic tooling during this project is available in the repository: [AI Leverage Log (.docx)](./AI%20Leverage%20Log.docx).
 
 ## License
 
