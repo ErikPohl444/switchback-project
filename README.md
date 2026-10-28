@@ -204,19 +204,7 @@ const offers = await service.getValidOffers(tenantContext); // OfferPayload[]
 - Tenant isolation is enforced at the repository boundary: queries are bound to the caller's `tenant_id` and cannot be constructed without a valid tenant context.
 - The tenant universe is closed (`tenant0` | `switchback`); unknown, missing, or empty tenants are rejected fail-closed — with the typed `InvalidTenantContextError` — before any query is built.
 - Exclusive offers are whitelist-shaped: they surface only for the tenant the exclusivity was negotiated for (`switchback`); every other tenant, including `tenant0`, gets `is_exclusive = false` appended at query construction time, so exclusives cannot leak across tenants even through misfiled rows.
-- Reporting vulnerabilities: TBD (contact/process to be defined).
-
-## Roadmap
-
-TBD
-
-## Contributing
-
-TBD
-
-## FAQ
-
-TBD
+- Reporting vulnerabilities: Contact security@switchback.com.
 
 ## License
 
