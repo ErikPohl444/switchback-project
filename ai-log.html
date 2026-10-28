@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Leverage Log - Switchback Case Study</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        color: #24292e;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+        background-color: #f6f8fa;
+      }
+      .container {
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(27, 31, 35, 0.1);
+      }
+      h1 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        font-size: 2em;
+        margin-top: 0;
+        color: #0366d6;
+      }
+      h2 {
+        border-bottom: 1px solid #eaecef;
+        padding-bottom: 0.3em;
+        font-size: 1.4em;
+        margin-top: 24px;
+        color: #24292e;
+      }
+      p,
+      li {
+        font-size: 16px;
+      }
+      ul {
+        padding-left: 20px;
+      }
+      li {
+        margin-bottom: 8px;
+      }
+      .meta {
+        background-color: #f1f8ff;
+        border-left: 4px solid #0366d6;
+        padding: 12px 16px;
+        margin-bottom: 24px;
+        font-size: 15px;
+      }
+      .footer {
+        margin-top: 40px;
+        border-top: 1px solid #eaecef;
+        padding-top: 20px;
+        font-size: 14px;
+        color: #586069;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>AI Leverage Log</h1>
+
+      <div class="meta">
+        <strong>Context:</strong> Qualitative developer experience (devex) log evaluating AI models
+        and agentic tooling during the Switchback engineering manager case study.
+      </div>
+
+      <h2>Tooling Overview</h2>
+      <ul>
+        <li><strong>Email proof-reading:</strong> Gemini chatbot [Extra-thorough]</li>
+        <li><strong>Design-plan:</strong> Gemini chatbot [Extra-thorough]</li>
+        <li><strong>Coding:</strong> Harness: OpenCode extension to VS Code</li>
+        <li>
+          <strong>Models evaluated:</strong>
+          <ul>
+            <li>
+              Local Ollama Qwen2.5 Coder 14B
+              <em>[Rejected due to compute/RAM constraints on Mac]</em>
+            </li>
+            <li>GLM-5.3-Flash free <em>[Ran out of credits]</em></li>
+            <li>Gemini 3.5 Flash Lite Google via API key <em>[Used for remainder of work]</em></li>
+          </ul>
+        </li>
+      </ul>
+
+      <h2>Limitation and Opportunity</h2>
+      <p>
+        I’m used to working with expensive frontier models. For this experiment, I wanted to use
+        free models and see the difference. Not really a benchmark test, but a qualitative devex
+        test. The experience was eye-opening.
+      </p>
+
+      <h3>What didn’t change from personal use</h3>
+      <p>I use Gemini chatbot for the following items in general:</p>
+      <ul>
+        <li>
+          <strong>Refine emails and comms:</strong> I want my email to be mine, but I also want a
+          chatbot to evaluate glaring errors, comment on tone, and give me a chance to revise the
+          email. I appreciate its suggestions, but I often use those as a jumping-off point for my
+          own wording.
+        </li>
+        <li>
+          <strong>Take raw ideas and format them or recommend additions:</strong> When listing out
+          assumptions or milestone steps, I did a significant amount of startup work, leaving
+          polish, sequencing, and suggestions for addition to the chatbot.
+        </li>
+        <li>
+          <strong>Team leadership:</strong> I find the chatbot has little to offer me here, but I
+          used it as a note-taker. Example: I tell the chatbot how I intend to inspire Priya, then
+          later when drafting a different doc, I ask it to recall my notes and see if there are
+          suggestions it has.
+        </li>
+      </ul>
+      <p>
+        <em
+          >Gemini’s chatbot nomenclature changes frequently enough so that by the time I’m writing
+          this, it has a different nomenclature. I’d probably use Claude on the job.</em
+        >
+      </p>
+
+      <h3>What did change</h3>
+      <p>
+        I finally tried out a local model using Ollama. I’ve always wanted this for security
+        reasons, air-gapping the model from third-party vendors in at least this toy setup. I found
+        the solution unworkable using the model I chose: not enough compute for the amount of RAM it
+        consumed on my puny Mac. It was good to learn the setup steps and configure it, but I
+        abandoned it.
+      </p>
+      <p>
+        Using OpenCode, I’m used to frontier models. So trying models with names like Big Pickle or
+        GLM-5.3 was like speaking vernacular from other parts of the US. Aside from the trivial
+        differences, the models were not punishingly bad, just slow. Then I ran out of credits and
+        switched to Gemini 3.5 Flash Lite, which gets throttled.
+      </p>
+
+      <h2>Disagreements & Agent Collaboration</h2>
+      <p>
+        Oh yes. I’ve developed a style of active prompting followed by polite interrogation. I’m
+        used to double-clicking [Esc] in OpenCode when I see an agent start to get off track.
+      </p>
+      <ul>
+        <li>Agents attempted to build other load-bearing components: <strong>nope!</strong></li>
+        <li>
+          Chatbots tried to build out entire project plans for me or to prematurely jump from a few
+          assumptions into coding. <strong>Nope!</strong>
+        </li>
+      </ul>
+      <p>
+        I scrapped so many slides from Chatbots it was silly. The most reliable method here and in
+        past experience is to provide wording and just let the bot prettify it. The more it goes
+        rogue, the less it suits my particular experience and authenticity.
+      </p>
+      <p>
+        I found I needed to prompt the agent to build test cases, to use TDD, and to build out a
+        full repo doc suite (including but not limited to a helpful README).
+      </p>
+      <p>
+        I disputed but ultimately deferred to the particular DB logic design for tenant isolation
+        that the agent/model combo chose.
+      </p>
+      <p>
+        The agent took a lot of shortcuts in the isolation piece, looking more and more like the
+        kind of isolation the specs warned me about. But I coached it like I would an over-eager
+        junior engineer to a better solution.
+      </p>
+
+      <div class="footer">Switchback Engineering Case Study • AI Leverage Log</div>
+    </div>
+  </body>
+</html>
