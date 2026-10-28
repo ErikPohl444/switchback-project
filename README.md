@@ -17,6 +17,7 @@ A multi-tenant offers service slice implementing tenant-scoped offer validation 
 - [Architecture](#architecture)
 - [API Reference](#api-reference)
 - [Security](#security)
+- [Assumptions](#assumptions)
 - [AI Leverage Log](#ai-leverage-log)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
@@ -201,6 +202,10 @@ const offers = await service.getValidOffers(tenantContext); // OfferPayload[]
 - The tenant universe is closed (`tenant0` | `switchback`); unknown, missing, or empty tenants are rejected fail-closed — with the typed `InvalidTenantContextError` — before any query is built.
 - Exclusive offers are whitelist-shaped: they surface only for the tenant the exclusivity was negotiated for (`switchback`); every other tenant, including `tenant0`, gets `is_exclusive = false` appended at query construction time, so exclusives cannot leak across tenants even through misfiled rows.
 - Reporting vulnerabilities: Contact security@switchback.com.
+
+## Assumptions
+
+The distributable case study questions, sections, current assumptions, and bank answers are fully documented in [Assumptions & Questions](./assumptions.md).
 
 ## AI Leverage Log
 
