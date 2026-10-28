@@ -5,7 +5,7 @@ import { OfferService } from './offer.service.js';
 const FIXED_NOW = new Date('2026-01-15T12:00:00.000Z');
 
 const buildTenant = (overrides: Partial<TenantContext> = {}): TenantContext => ({
-  tenantId: 'tenant-abc',
+  tenantId: 'switchback',
   environment: 'production',
   ...overrides,
 });
@@ -41,7 +41,10 @@ describe('OfferService.validateOffer', () => {
 
   describe('tenant context', () => {
     it('fails when tenantId is empty', () => {
-      const result = service.validateOffer(buildTenant({ tenantId: '' }), buildOffer());
+      const result = service.validateOffer(
+        buildTenant({ tenantId: '' as unknown as TenantContext['tenantId'] }),
+        buildOffer(),
+      );
 
       expect(result).toEqual({ isValid: false, reason: 'Invalid tenant context' });
     });
@@ -55,13 +58,27 @@ describe('OfferService.validateOffer', () => {
     });
 
     it('fails when tenantId is whitespace-only', () => {
-      const result = service.validateOffer(buildTenant({ tenantId: '   ' }), buildOffer());
+      const result = service.validateOffer(
+        buildTenant({ tenantId: '   ' as unknown as TenantContext['tenantId'] }),
+        buildOffer(),
+      );
 
       expect(result).toEqual({ isValid: false, reason: 'Invalid tenant context' });
     });
 
     it('fails when tenantId is not a string', () => {
       const context = { tenantId: 42, environment: 'production' } as unknown as TenantContext;
+
+      const result = service.validateOffer(context, buildOffer());
+
+      expect(result).toEqual({ isValid: false, reason: 'Invalid tenant context' });
+    });
+
+    it('fails when tenantId is outside the closed tenant universe', () => {
+      const context = {
+        tenantId: 'tenant-abc',
+        environment: 'production',
+      } as unknown as TenantContext;
 
       const result = service.validateOffer(context, buildOffer());
 
@@ -141,7 +158,10 @@ describe('OfferService.validateOffer', () => {
     it('reports invalid tenant context before expiry', () => {
       const offer = buildOffer({ expiresAt: new Date('2020-01-01T00:00:00.000Z') });
 
-      const result = service.validateOffer(buildTenant({ tenantId: '' }), offer);
+      const result = service.validateOffer(
+        buildTenant({ tenantId: '' as unknown as TenantContext['tenantId'] }),
+        offer,
+      );
 
       expect(result.reason).toBe('Invalid tenant context');
     });
@@ -237,8 +257,8 @@ describe('OfferService.getValidOffers', () => {
   it('propagates repository tenant-isolation guardrail failures', async () => {
     repository.findOffersByTenant.mockRejectedValue(new Error('Invalid tenant context'));
 
-    await expect(service.getValidOffers(buildTenant({ tenantId: '' }))).rejects.toThrow(
-      'Invalid tenant context',
-    );
+    await expect(
+      service.getValidOffers(buildTenant({ tenantId: '' as unknown as TenantContext['tenantId'] })),
+    ).rejects.toThrow('Invalid tenant context');
   });
 });

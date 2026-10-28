@@ -7,9 +7,11 @@ import {
   type TenantScopedOfferQuery,
 } from './offer.repository.js';
 import { OfferService } from './offer.service.js';
+import type { TenantId } from './tenant.js';
+import { InvalidTenantContextError } from './tenant.js';
 
 const buildContext = (overrides: Partial<TenantContext> = {}): TenantContext => ({
-  tenantId: 'tenant1',
+  tenantId: 'switchback',
   environment: 'production',
   ...overrides,
 });
@@ -76,9 +78,11 @@ describe('OfferRepository.findOffersByTenant', () => {
   it('always binds tenant_id to the calling tenant', async () => {
     const { repository, builders } = buildRepository();
 
-    await repository.findOffersByTenant(buildContext({ tenantId: 'tenant42' }));
+    for (const tenantId of ['tenant0', 'switchback'] as const) {
+      await repository.findOffersByTenant(buildContext({ tenantId }));
 
-    expect(builders[0]?.clauses).toEqual([{ column: 'tenant_id', value: 'tenant42' }]);
+      expect(builders.at(-1)?.clauses[0]).toEqual({ column: 'tenant_id', value: tenantId });
+    }
   });
 
   it('targets the offers table', async () => {
@@ -100,12 +104,12 @@ describe('OfferRepository.findOffersByTenant', () => {
     ]);
   });
 
-  it('never appends is_exclusive for other tenants', async () => {
+  it('never appends is_exclusive for the exclusivity tenant', async () => {
     const { repository, builders } = buildRepository();
 
-    await repository.findOffersByTenant(buildContext({ tenantId: 'tenant1' }));
+    await repository.findOffersByTenant(buildContext({ tenantId: 'switchback' }));
 
-    expect(builders[0]?.clauses).toEqual([{ column: 'tenant_id', value: 'tenant1' }]);
+    expect(builders[0]?.clauses).toEqual([{ column: 'tenant_id', value: 'switchback' }]);
   });
 
   describe('tenant isolation breaches', () => {
@@ -134,25 +138,34 @@ describe('OfferRepository.findOffersByTenant', () => {
 
     await expect(
       repository.findOffersByTenant({ environment: 'production' } as TenantContext),
-    ).rejects.toThrow('Invalid tenant context');
+    ).rejects.toThrowError(InvalidTenantContextError);
     expect(db).not.toHaveBeenCalled();
   });
 
   it('refuses to query with an empty tenantId', async () => {
     const { repository, db } = buildRepository();
 
-    await expect(repository.findOffersByTenant(buildContext({ tenantId: '' }))).rejects.toThrow(
-      'Invalid tenant context',
-    );
+    await expect(
+      repository.findOffersByTenant(buildContext({ tenantId: '' as unknown as TenantId })),
+    ).rejects.toThrow('Invalid tenant context (tenantId is missing, empty, or whitespace-only)');
     expect(db).not.toHaveBeenCalled();
   });
 
   it('refuses to query with a whitespace-only tenantId', async () => {
     const { repository, db } = buildRepository();
 
-    await expect(repository.findOffersByTenant(buildContext({ tenantId: '  ' }))).rejects.toThrow(
-      'Invalid tenant context',
-    );
+    await expect(
+      repository.findOffersByTenant(buildContext({ tenantId: '  ' as unknown as TenantId })),
+    ).rejects.toThrow('Invalid tenant context (tenantId is missing, empty, or whitespace-only)');
+    expect(db).not.toHaveBeenCalled();
+  });
+
+  it('refuses to query an unknown tenant before any database access', async () => {
+    const { repository, db } = buildRepository();
+
+    await expect(
+      repository.findOffersByTenant(buildContext({ tenantId: 'tenant42' as unknown as TenantId })),
+    ).rejects.toThrow('Invalid tenant context (unknown tenant "tenant42")');
     expect(db).not.toHaveBeenCalled();
   });
 
@@ -164,7 +177,7 @@ describe('OfferRepository.findOffersByTenant', () => {
       max_redemptions: 50,
       current_redemptions: 12,
       expires_at: '2026-03-01T00:00:00.000Z',
-      tenant_id: 'tenant1',
+      tenant_id: 'switchback',
       is_exclusive: true,
     };
     const { repository } = buildRepository([row]);
@@ -191,7 +204,7 @@ describe('OfferRepository.findOffersByTenant', () => {
       max_redemptions: 10,
       current_redemptions: 0,
       expires_at: new Date('2026-06-01T00:00:00.000Z'),
-      tenant_id: 'tenant1',
+      tenant_id: 'switchback',
       is_exclusive: false,
     };
     const { repository } = buildRepository([row]);
