@@ -43,7 +43,7 @@ The Switchback Offers Service validates and retrieves promotional offers on beha
 
 ## Prerequisites
 
-- Node.js and npm (minimum supported versions: TBD)
+- Node.js (>= 26, pinned in `.nvmrc` and declared in `engines`) and npm
 - A Git client
 
 ## Installation
@@ -212,4 +212,4 @@ TBD
 
 ## License
 
-ISC (per `package.json`); a `LICENSE` file has not yet been added.
+ISC (per `package.json`); see the `LICENSE` file.
